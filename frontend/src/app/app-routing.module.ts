@@ -3,12 +3,14 @@ import { NgModule } from '@angular/core';
 import { NotfoundComponent } from './demo/components/notfound/notfound.component';
 import { AppLayoutComponent } from "./layout/app.layout.component";
 import { HomeComponent } from './home/home.component';
+import { authGuard } from './core/auth/auth.guard';
 
 @NgModule({
     imports: [
         RouterModule.forRoot([
             {
                 path: '', component: AppLayoutComponent,
+                canActivate: [authGuard],
                 children: [
                     { path: '', component: HomeComponent }
                 ]
