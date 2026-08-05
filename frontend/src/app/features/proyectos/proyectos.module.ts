@@ -12,18 +12,24 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TooltipModule } from 'primeng/tooltip';
 
 import { ProyectosListComponent } from './proyectos-list/proyectos-list.component';
 import { ProyectoFormComponent } from './proyecto-form/proyecto-form.component';
+import { ColumnasListComponent } from './columnas/columnas-list/columnas-list.component';
+import { ColumnaFormComponent } from './columnas/columna-form/columna-form.component';
 
 const routes: Routes = [
-    { path: '', component: ProyectosListComponent }
+    { path: '', component: ProyectosListComponent },
+    { path: ':id/columnas', component: ColumnasListComponent }
 ];
 
 @NgModule({
     declarations: [
         ProyectosListComponent,
-        ProyectoFormComponent
+        ProyectoFormComponent,
+        ColumnasListComponent,
+        ColumnaFormComponent
     ],
     imports: [
         CommonModule,
@@ -38,7 +44,8 @@ const routes: Routes = [
         DropdownModule,
         CalendarModule,
         ToastModule,
-        ConfirmDialogModule
+        ConfirmDialogModule,
+        TooltipModule
     ]
 })
 export class ProyectosModule { }

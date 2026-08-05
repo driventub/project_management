@@ -4,6 +4,7 @@ using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using ProjectManagement.Application.Auth;
+using ProjectManagement.Application.Columnas;
 using ProjectManagement.Application.Ports;
 using ProjectManagement.Application.Proyectos;
 using ProjectManagement.Infrastructure;
@@ -22,6 +23,7 @@ builder.Services.AddMapster();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProyectoService>();
+builder.Services.AddScoped<ColumnaService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key configuration value is required.");
