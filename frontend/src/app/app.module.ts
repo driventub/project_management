@@ -7,12 +7,11 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { AppLayoutModule } from './layout/app.layout.module';
 import { NotfoundComponent } from './demo/components/notfound/notfound.component';
-import { HomeComponent } from './home/home.component';
 import { AuthInterceptor } from './core/auth/auth.interceptor';
 
 @NgModule({
     declarations: [
-        AppComponent, NotfoundComponent, HomeComponent
+        AppComponent, NotfoundComponent
     ],
     imports: [
         AppRoutingModule,

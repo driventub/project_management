@@ -2,7 +2,6 @@ import { RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
 import { NotfoundComponent } from './demo/components/notfound/notfound.component';
 import { AppLayoutComponent } from "./layout/app.layout.component";
-import { HomeComponent } from './home/home.component';
 import { authGuard } from './core/auth/auth.guard';
 
 @NgModule({
@@ -12,7 +11,7 @@ import { authGuard } from './core/auth/auth.guard';
                 path: '', component: AppLayoutComponent,
                 canActivate: [authGuard],
                 children: [
-                    { path: '', component: HomeComponent }
+                    { path: '', loadChildren: () => import('./features/proyectos/proyectos.module').then(m => m.ProyectosModule) }
                 ]
             },
             { path: 'auth', loadChildren: () => import('./demo/components/auth/auth.module').then(m => m.AuthModule) },
