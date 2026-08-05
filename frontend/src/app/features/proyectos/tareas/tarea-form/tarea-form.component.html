@@ -1,0 +1,52 @@
+<p-dialog
+    [header]="isEdit ? 'Editar tarea' : 'Nueva tarea'"
+    [(visible)]="visible"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+    (onHide)="close()">
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field mb-3">
+            <label for="titulo">Título</label>
+            <input id="titulo" type="text" pInputText formControlName="titulo" class="w-full" />
+        </div>
+
+        <div class="field mb-3">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" pInputTextarea formControlName="descripcion" class="w-full" rows="3"></textarea>
+        </div>
+
+        <div class="field mb-3">
+            <label for="prioridad">Prioridad</label>
+            <p-dropdown
+                id="prioridad"
+                [options]="prioridades"
+                formControlName="prioridad"
+                styleClass="w-full"
+                appendTo="body">
+            </p-dropdown>
+        </div>
+
+        <div class="field mb-3">
+            <label for="responsable">Responsable</label>
+            <p-dropdown
+                id="responsable"
+                [options]="usuarios"
+                optionLabel="nombre"
+                optionValue="id"
+                formControlName="responsableId"
+                [showClear]="true"
+                placeholder="Sin asignar"
+                styleClass="w-full"
+                appendTo="body">
+            </p-dropdown>
+        </div>
+
+        <p class="text-red-500" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <button pButton type="button" label="Cancelar" class="p-button-text" (click)="close()"></button>
+        <button pButton type="button" label="Guardar" [loading]="saving" (click)="submit()"></button>
+    </ng-template>
+</p-dialog>

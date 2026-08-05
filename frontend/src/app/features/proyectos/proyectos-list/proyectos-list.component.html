@@ -37,7 +37,7 @@
                 <th>Fecha inicio</th>
                 <th>Fecha fin esperada</th>
                 <th>Estado</th>
-                <th style="width: 10rem"></th>
+                <th style="width: 12rem"></th>
             </tr>
         </ng-template>
 
@@ -50,6 +50,7 @@
                 <td>{{ proyecto.estado }}</td>
                 <td>
                     <button pButton icon="pi pi-table" class="p-button-text p-button-sm" pTooltip="Columnas" [routerLink]="[proyecto.id, 'columnas']"></button>
+                    <button pButton icon="pi pi-th-large" class="p-button-text p-button-sm" pTooltip="Tablero" [routerLink]="[proyecto.id, 'tablero']"></button>
                     <button pButton icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="openEdit(proyecto)"></button>
                     <button pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger" (click)="confirmDelete(proyecto)"></button>
                 </td>

@@ -1,0 +1,53 @@
+.tablero-columnas {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+}
+
+.tablero-columna {
+    flex: 0 0 280px;
+    background: var(--surface-ground);
+    border-radius: 6px;
+    padding: 0.75rem;
+}
+
+.tablero-columna-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.tablero-columna-body {
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.tablero-tarea {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: 4px;
+    padding: 0.5rem;
+    cursor: move;
+}
+
+.tablero-tarea-descripcion {
+    font-size: 0.85rem;
+    color: var(--text-color-secondary);
+    margin: 0.25rem 0;
+}
+
+.cdk-drag-preview {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cdk-drag-placeholder {
+    opacity: 0.4;
+}
+
+.cdk-drop-list-dragging .tablero-tarea:not(.cdk-drag-placeholder) {
+    transition: transform 200ms ease;
+}

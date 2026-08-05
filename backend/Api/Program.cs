@@ -7,6 +7,8 @@ using ProjectManagement.Application.Auth;
 using ProjectManagement.Application.Columnas;
 using ProjectManagement.Application.Ports;
 using ProjectManagement.Application.Proyectos;
+using ProjectManagement.Application.Tareas;
+using ProjectManagement.Application.Usuarios;
 using ProjectManagement.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +26,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProyectoService>();
 builder.Services.AddScoped<ColumnaService>();
+builder.Services.AddScoped<TareaService>();
+builder.Services.AddScoped<UsuarioService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key configuration value is required.");
