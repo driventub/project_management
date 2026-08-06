@@ -21,23 +21,28 @@ services:
     build:
       context: ./backend
       dockerfile: Api/Dockerfile
-      target: final
+      target: dev
     ports:
       - "5115:8080"
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./backend:/src
 
   frontend:
     container_name: projectmanagement-frontend
+    env_file:
+      - ./.env.example
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      target: production
+      target: dev
     ports:
-      - "8081:80"
-    depends_on:
-      - api
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   postgres_data:
