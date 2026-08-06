@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProjectManagement.Application.Ports;
 using ProjectManagement.Infrastructure.Persistence;
+using ProjectManagement.Infrastructure.Realtime;
 using ProjectManagement.Infrastructure.Repositories;
 using ProjectManagement.Infrastructure.Security;
 
@@ -24,6 +25,9 @@ public static class DependencyInjection
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, JwtTokenService>();
+
+        services.AddSignalR();
+        services.AddScoped<ITableroNotifier, TableroNotifier>();
 
         return services;
     }

@@ -9,12 +9,14 @@ public class TareaService
     private readonly ITareaRepository _tareaRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ITableroNotifier _tableroNotifier;
 
-    public TareaService(ITareaRepository tareaRepository, IUnitOfWork unitOfWork, IMapper mapper)
+    public TareaService(ITareaRepository tareaRepository, IUnitOfWork unitOfWork, IMapper mapper, ITableroNotifier tableroNotifier)
     {
         _tareaRepository = tareaRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _tableroNotifier = tableroNotifier;
     }
 
     public async Task<IReadOnlyList<TareaDto>> GetByProyectoIdAsync(Guid proyectoId, CancellationToken cancellationToken = default)
@@ -42,7 +44,15 @@ public class TareaService
         await _tareaRepository.AddAsync(tarea, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return _mapper.Map<TareaDto>(tarea);
+        // existentes may be empty (first task in the column), in which case tarea.Columna
+        // never got loaded into the change tracker via relationship fixup — refetch with
+        // its Include(Columna) so the ProyectoId mapping below doesn't NRE.
+        var creada = await _tareaRepository.GetByIdAsync(tarea.Id, cancellationToken);
+        var dto = _mapper.Map<TareaDto>(creada);
+
+        await _tableroNotifier.TareaCreadaAsync(dto.ProyectoId, dto, cancellationToken);
+
+        return dto;
     }
 
     public async Task<TareaDto?> UpdateAsync(Guid id, TareaRequest request, CancellationToken cancellationToken = default)
@@ -58,7 +68,11 @@ public class TareaService
         _tareaRepository.Update(tarea);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return _mapper.Map<TareaDto>(tarea);
+        var dto = _mapper.Map<TareaDto>(tarea);
+
+        await _tableroNotifier.TareaActualizadaAsync(dto.ProyectoId, dto, cancellationToken);
+
+        return dto;
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
@@ -69,8 +83,13 @@ public class TareaService
             return false;
         }
 
+        var proyectoId = tarea.Columna.ProyectoId;
+
         _tareaRepository.Remove(tarea);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _tableroNotifier.TareaEliminadaAsync(proyectoId, id, cancellationToken);
+
         return true;
     }
 
@@ -83,6 +102,7 @@ public class TareaService
         }
 
         var columnaOrigenId = tarea.ColumnaId;
+        var proyectoId = tarea.Columna.ProyectoId;
         tarea.ColumnaId = request.ColumnaDestinoId;
 
         var tareasDestino = columnaOrigenId == request.ColumnaDestinoId
@@ -105,6 +125,7 @@ public class TareaService
             _tareaRepository.Update(tareaOrdenada);
         }
 
+        var tareasOrigenActualizadas = tareasDestino;
         if (columnaOrigenId != request.ColumnaDestinoId)
         {
             var restantesOrigen = (await _tareaRepository.GetByColumnaIdAsync(columnaOrigenId, cancellationToken))
@@ -117,10 +138,23 @@ public class TareaService
                 restantesOrigen[index].Orden = index;
                 _tareaRepository.Update(restantesOrigen[index]);
             }
+
+            tareasOrigenActualizadas = restantesOrigen;
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return _mapper.Map<TareaDto>(tarea);
+        var dto = _mapper.Map<TareaDto>(tarea);
+
+        var notificacion = new TareaMovidaNotification(
+            proyectoId,
+            columnaOrigenId,
+            request.ColumnaDestinoId,
+            _mapper.Map<List<TareaDto>>(tareasOrigenActualizadas.OrderBy(t => t.Orden)),
+            _mapper.Map<List<TareaDto>>(tareasDestino.OrderBy(t => t.Orden)));
+
+        await _tableroNotifier.TareaMovidaAsync(notificacion, cancellationToken);
+
+        return dto;
     }
 }

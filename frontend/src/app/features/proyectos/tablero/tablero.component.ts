@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { MessageService } from 'primeng/api';
@@ -6,6 +6,8 @@ import { Columna } from '../columnas/columna.models';
 import { ColumnaService } from '../columnas/columna.service';
 import { Tarea } from '../tareas/tarea.models';
 import { TareaService } from '../tareas/tarea.service';
+import { TableroRealtimeService } from './tablero-realtime.service';
+import { TareaMovidaNotification } from './tablero-realtime.models';
 
 interface ColumnaConTareas extends Columna {
     tareas: Tarea[];
@@ -17,7 +19,7 @@ interface ColumnaConTareas extends Columna {
     styleUrls: ['./tablero.component.scss'],
     providers: [MessageService]
 })
-export class TableroComponent implements OnInit {
+export class TableroComponent implements OnInit, OnDestroy {
 
     proyectoId!: string;
     columnas: ColumnaConTareas[] = [];
@@ -32,12 +34,18 @@ export class TableroComponent implements OnInit {
         private router: Router,
         private columnaService: ColumnaService,
         private tareaService: TareaService,
-        private messageService: MessageService
+        private messageService: MessageService,
+        private tableroRealtime: TableroRealtimeService
     ) { }
 
     ngOnInit(): void {
         this.proyectoId = this.route.snapshot.paramMap.get('id')!;
         this.load();
+        this.conectarRealtime();
+    }
+
+    ngOnDestroy(): void {
+        this.tableroRealtime.desconectar();
     }
 
     get columnaIds(): string[] {
@@ -142,5 +150,58 @@ export class TableroComponent implements OnInit {
                 this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo mover la tarea.' });
             }
         });
+    }
+
+    private conectarRealtime(): void {
+        this.tableroRealtime.conectar(this.proyectoId);
+        this.tableroRealtime.onTareaCreada(tarea => this.aplicarTareaCreada(tarea));
+        this.tableroRealtime.onTareaActualizada(tarea => this.aplicarTareaActualizada(tarea));
+        this.tableroRealtime.onTareaEliminada(tareaId => this.aplicarTareaEliminada(tareaId));
+        this.tableroRealtime.onTareaMovida(notificacion => this.aplicarTareaMovida(notificacion));
+
+        this.tableroRealtime.iniciar().catch(() => {
+            this.messageService.add({ severity: 'warn', summary: 'Tiempo real', detail: 'No se pudo conectar al canal en tiempo real.' });
+        });
+    }
+
+    // Estas tres se aplican también al autor del cambio (recibe su propio evento):
+    // el estado local ya se refrescó vía load()/drop() antes de que llegara el evento,
+    // así que el merge por id abajo es idempotente y no rompe nada.
+    private aplicarTareaCreada(tarea: Tarea): void {
+        const columna = this.columnas.find(c => c.id === tarea.columnaId);
+        if (columna && !columna.tareas.some(t => t.id === tarea.id)) {
+            columna.tareas = [...columna.tareas, tarea].sort((a, b) => a.orden - b.orden);
+        }
+    }
+
+    private aplicarTareaActualizada(tarea: Tarea): void {
+        // La edición nunca cambia columnaId (eso solo lo hace mover), así que
+        // basta con localizar su columna actual y reemplazarla ahí.
+        const columna = this.columnas.find(c => c.id === tarea.columnaId);
+        if (!columna) {
+            return;
+        }
+        const index = columna.tareas.findIndex(t => t.id === tarea.id);
+        columna.tareas = index === -1
+            ? [...columna.tareas, tarea].sort((a, b) => a.orden - b.orden)
+            : columna.tareas.map((t, i) => i === index ? tarea : t);
+    }
+
+    private aplicarTareaEliminada(tareaId: string): void {
+        for (const columna of this.columnas) {
+            columna.tareas = columna.tareas.filter(t => t.id !== tareaId);
+        }
+    }
+
+    private aplicarTareaMovida(notificacion: TareaMovidaNotification): void {
+        const origen = this.columnas.find(c => c.id === notificacion.columnaOrigenId);
+        const destino = this.columnas.find(c => c.id === notificacion.columnaDestinoId);
+
+        if (origen) {
+            origen.tareas = [...notificacion.tareasColumnaOrigen].sort((a, b) => a.orden - b.orden);
+        }
+        if (destino && destino !== origen) {
+            destino.tareas = [...notificacion.tareasColumnaDestino].sort((a, b) => a.orden - b.orden);
+        }
     }
 }

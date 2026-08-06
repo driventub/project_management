@@ -10,6 +10,7 @@ using ProjectManagement.Application.Proyectos;
 using ProjectManagement.Application.Tareas;
 using ProjectManagement.Application.Usuarios;
 using ProjectManagement.Infrastructure;
+using ProjectManagement.Infrastructure.Realtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,6 +50,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         };
+
+        // Browsers can't set custom headers on a WebSocket upgrade request, so the
+        // SignalR JS client falls back to an access_token query string param for that
+        // transport. Only honor it on the hub path, never on regular API requests.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    context.HttpContext.Request.Path.StartsWithSegments(TableroHub.Ruta))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization();
 
@@ -84,6 +103,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<TableroHub>(TableroHub.Ruta);
 
 // app.MapGet("/api/usuarios", async (IUsuarioRepository usuarioRepository, CancellationToken cancellationToken) =>
 // {
