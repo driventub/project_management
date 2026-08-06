@@ -7,6 +7,7 @@ using ProjectManagement.Application.Auth;
 using ProjectManagement.Application.Columnas;
 using ProjectManagement.Application.Ports;
 using ProjectManagement.Application.Proyectos;
+using ProjectManagement.Application.Reportes;
 using ProjectManagement.Application.Tareas;
 using ProjectManagement.Application.Usuarios;
 using ProjectManagement.Infrastructure;
@@ -29,6 +30,7 @@ builder.Services.AddScoped<ProyectoService>();
 builder.Services.AddScoped<ColumnaService>();
 builder.Services.AddScoped<TareaService>();
 builder.Services.AddScoped<UsuarioService>();
+builder.Services.AddScoped<ReporteService>();
 
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("Jwt:Key configuration value is required.");
@@ -82,7 +84,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(corsAllowedOrigins)
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .WithExposedHeaders("Content-Disposition");
     });
 });
 

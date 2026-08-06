@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
+import { HttpResponse } from '@angular/common/http';
 import { TableLazyLoadEvent } from 'primeng/table';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subject, debounceTime } from 'rxjs';
 import { Proyecto } from '../proyecto.models';
 import { ProyectoService } from '../proyecto.service';
+import { FormatoReporte, ReporteService } from '../reportes/reporte.service';
 
 @Component({
     selector: 'app-proyectos-list',
@@ -26,6 +28,7 @@ export class ProyectosListComponent {
 
     constructor(
         private proyectoService: ProyectoService,
+        private reporteService: ReporteService,
         private confirmationService: ConfirmationService,
         private messageService: MessageService
     ) {
@@ -80,6 +83,38 @@ export class ProyectosListComponent {
             icon: 'pi pi-exclamation-triangle',
             accept: () => this.delete(proyecto)
         });
+    }
+
+    exportarReporte(proyecto: Proyecto, formato: FormatoReporte): void {
+        this.reporteService.exportar(proyecto.id, formato).subscribe({
+            next: (response) => this.descargarBlob(response),
+            error: () => {
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo generar el reporte.' });
+            }
+        });
+    }
+
+    private descargarBlob(response: HttpResponse<Blob>): void {
+        if (!response.body) {
+            return;
+        }
+
+        const nombreArchivo = this.extraerNombreArchivo(response.headers.get('Content-Disposition')) ?? 'reporte';
+        const url = window.URL.createObjectURL(response.body);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = nombreArchivo;
+        link.click();
+        window.URL.revokeObjectURL(url);
+    }
+
+    private extraerNombreArchivo(contentDisposition: string | null): string | null {
+        if (!contentDisposition) {
+            return null;
+        }
+
+        const match = /filename="?([^"]+)"?/.exec(contentDisposition);
+        return match ? match[1] : null;
     }
 
     private delete(proyecto: Proyecto): void {
