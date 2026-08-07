@@ -1,0 +1,17 @@
+services:
+  backend-test:
+    container_name: projectmanagement-backend-test
+    build:
+      context: ./backend
+      dockerfile: Api/Dockerfile
+      target: test
+
+  frontend-test:
+    container_name: projectmanagement-frontend-test
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: test
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
