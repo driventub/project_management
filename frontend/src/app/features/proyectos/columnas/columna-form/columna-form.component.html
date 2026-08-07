@@ -1,0 +1,21 @@
+<p-dialog
+    [header]="isEdit ? 'Editar columna' : 'Nueva columna'"
+    [(visible)]="visible"
+    [modal]="true"
+    [style]="{ width: '400px' }"
+    (onHide)="close()">
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field mb-3">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" pInputText formControlName="nombre" class="w-full" />
+        </div>
+
+        <p class="text-red-500" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <button pButton type="button" label="Cancelar" class="p-button-text" (click)="close()"></button>
+        <button pButton type="button" label="Guardar" [loading]="saving" (click)="submit()"></button>
+    </ng-template>
+</p-dialog>

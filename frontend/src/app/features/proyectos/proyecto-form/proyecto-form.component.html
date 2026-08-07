@@ -1,0 +1,41 @@
+<p-dialog
+    [header]="isEdit ? 'Editar proyecto' : 'Nuevo proyecto'"
+    [(visible)]="visible"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+    (onHide)="close()">
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="field mb-3">
+            <label for="nombre">Nombre</label>
+            <input id="nombre" type="text" pInputText formControlName="nombre" class="w-full" />
+        </div>
+
+        <div class="field mb-3">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" pInputTextarea formControlName="descripcion" rows="3" class="w-full"></textarea>
+        </div>
+
+        <div class="field mb-3">
+            <label for="fechaInicio">Fecha inicio</label>
+            <p-calendar inputId="fechaInicio" formControlName="fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" class="w-full"></p-calendar>
+        </div>
+
+        <div class="field mb-3">
+            <label for="fechaFinEsperada">Fecha fin esperada</label>
+            <p-calendar inputId="fechaFinEsperada" formControlName="fechaFinEsperada" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" class="w-full"></p-calendar>
+        </div>
+
+        <div class="field mb-3">
+            <label for="estado">Estado</label>
+            <p-dropdown inputId="estado" formControlName="estado" [options]="estados" appendTo="body" class="w-full"></p-dropdown>
+        </div>
+
+        <p class="text-red-500" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <button pButton type="button" label="Cancelar" class="p-button-text" (click)="close()"></button>
+        <button pButton type="button" label="Guardar" [loading]="saving" (click)="submit()"></button>
+    </ng-template>
+</p-dialog>

@@ -1,0 +1,74 @@
+<div class="card">
+    <p-toast></p-toast>
+    <p-confirmDialog></p-confirmDialog>
+
+    <div class="flex justify-content-between align-items-center mb-3">
+        <h5 class="m-0">Proyectos</h5>
+        <button pButton icon="pi pi-plus" label="Nuevo proyecto" (click)="openCreate()"></button>
+    </div>
+
+    <div class="mb-3">
+        <span class="p-input-icon-left w-full md:w-4">
+            <i class="pi pi-search"></i>
+            <input
+                type="text"
+                pInputText
+                class="w-full"
+                placeholder="Buscar por nombre..."
+                [(ngModel)]="nombreFilter"
+                (ngModelChange)="onFilterChange()" />
+        </span>
+    </div>
+
+    <p-table
+        [value]="proyectos"
+        [lazy]="true"
+        (onLazyLoad)="load($event)"
+        [paginator]="true"
+        [rows]="pageSize"
+        [totalRecords]="totalRecords"
+        [loading]="loading"
+        responsiveLayout="scroll">
+
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Fecha inicio</th>
+                <th>Fecha fin esperada</th>
+                <th>Estado</th>
+                <th style="width: 16rem"></th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-proyecto>
+            <tr>
+                <td>{{ proyecto.nombre }}</td>
+                <td>{{ proyecto.descripcion }}</td>
+                <td>{{ proyecto.fechaInicio }}</td>
+                <td>{{ proyecto.fechaFinEsperada }}</td>
+                <td>{{ proyecto.estado }}</td>
+                <td>
+                    <button pButton icon="pi pi-table" class="p-button-text p-button-sm" pTooltip="Columnas" [routerLink]="[proyecto.id, 'columnas']"></button>
+                    <button pButton icon="pi pi-th-large" class="p-button-text p-button-sm" pTooltip="Tablero" [routerLink]="[proyecto.id, 'tablero']"></button>
+                    <button pButton icon="pi pi-file-pdf" class="p-button-text p-button-sm" pTooltip="Exportar PDF" (click)="exportarReporte(proyecto, 'pdf')"></button>
+                    <button pButton icon="pi pi-file-excel" class="p-button-text p-button-sm" pTooltip="Exportar Excel" (click)="exportarReporte(proyecto, 'xlsx')"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-text p-button-sm" (click)="openEdit(proyecto)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger" (click)="confirmDelete(proyecto)"></button>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="6" class="text-center">No hay proyectos.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<app-proyecto-form
+    [(visible)]="formVisible"
+    [proyecto]="proyectoEnEdicion"
+    (saved)="onSaved()">
+</app-proyecto-form>

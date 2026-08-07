@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: projectmanagement-db
+    env_file:
+      - ./.env.example
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    container_name: projectmanagement-api
+    env_file:
+      - ./.env.example
+    build:
+      context: ./backend
+      dockerfile: Api/Dockerfile
+      target: dev
+    ports:
+      - "5115:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/src
+
+  frontend:
+    container_name: projectmanagement-frontend
+    env_file:
+      - ./.env.example
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
