@@ -18,17 +18,17 @@
 
         <div class="field mb-3">
             <label for="fechaInicio">Fecha inicio</label>
-            <p-calendar inputId="fechaInicio" formControlName="fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" class="w-full"></p-calendar>
+            <p-calendar inputId="fechaInicio" formControlName="fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" class="w-full"></p-calendar>
         </div>
 
         <div class="field mb-3">
             <label for="fechaFinEsperada">Fecha fin esperada</label>
-            <p-calendar inputId="fechaFinEsperada" formControlName="fechaFinEsperada" dateFormat="yy-mm-dd" [showIcon]="true" class="w-full"></p-calendar>
+            <p-calendar inputId="fechaFinEsperada" formControlName="fechaFinEsperada" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" class="w-full"></p-calendar>
         </div>
 
         <div class="field mb-3">
             <label for="estado">Estado</label>
-            <p-dropdown inputId="estado" formControlName="estado" [options]="estados" class="w-full"></p-dropdown>
+            <p-dropdown inputId="estado" formControlName="estado" [options]="estados" appendTo="body" class="w-full"></p-dropdown>
         </div>
 
         <p class="text-red-500" *ngIf="errorMessage">{{ errorMessage }}</p>

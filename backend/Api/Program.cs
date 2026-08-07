@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProjectManagement.Application.Auth;
 using ProjectManagement.Application.Columnas;
@@ -11,6 +12,7 @@ using ProjectManagement.Application.Reportes;
 using ProjectManagement.Application.Tareas;
 using ProjectManagement.Application.Usuarios;
 using ProjectManagement.Infrastructure;
+using ProjectManagement.Infrastructure.Persistence;
 using ProjectManagement.Infrastructure.Realtime;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -90,6 +92,16 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Applies any pending migrations on startup (idempotent — EF tracks what's
+// already applied via __EFMigrationsHistory), so `docker compose up` against
+// a brand-new Postgres volume creates the schema and seeds the two users
+// without a separate manual `dotnet ef database update` step.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ProjectManagementDbContext>();
+    dbContext.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
