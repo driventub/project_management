@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using ProjectManagement.Application.Columnas;
 using ProjectManagement.Application.Ports;
 using ProjectManagement.Application.Tareas;
 
@@ -24,6 +25,12 @@ public class TableroNotifier : ITableroNotifier
 
     public Task TareaMovidaAsync(TareaMovidaNotification notificacion, CancellationToken cancellationToken = default) =>
         Clientes(notificacion.ProyectoId).SendAsync("TareaMovida", notificacion, cancellationToken);
+
+    public Task ColumnaCreadaAsync(Guid proyectoId, ColumnaDto columna, CancellationToken cancellationToken = default) =>
+        Clientes(proyectoId).SendAsync("ColumnaCreada", columna, cancellationToken);
+
+    public Task ColumnaEliminadaAsync(Guid proyectoId, Guid columnaId, CancellationToken cancellationToken = default) =>
+        Clientes(proyectoId).SendAsync("ColumnaEliminada", columnaId, cancellationToken);
 
     private IClientProxy Clientes(Guid proyectoId) => _hubContext.Clients.Group(TableroHub.Grupo(proyectoId));
 }

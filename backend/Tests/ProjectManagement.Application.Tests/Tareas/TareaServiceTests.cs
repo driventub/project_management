@@ -176,9 +176,89 @@ public class TareaServiceTests
         var service = new TareaService(tareaRepository.Object, unitOfWork.Object, TestMapperFactory.Create(), notifier.Object);
         var request = new TareaRequest(columna.Id, "Primera", string.Empty, "Media", null);
 
-        var resultado = await service.CreateAsync(request);
+        var resultado = await service.CreateAsync(proyectoId, request);
 
         Assert.Equal(0, resultado.Orden);
         Assert.Equal(proyectoId, resultado.ProyectoId);
+    }
+
+    [Fact]
+    public async Task CreateAsync_NotificaAlProyectoDeLaRuta_NoAlDerivadoDelDtoPostGuardado()
+    {
+        // Regresión: la notificación se emitía contra dto.ProyectoId, derivado de la
+        // navegación Columna del DTO ya mapeado post-guardado. Cuando ese valor volvía
+        // vacío, el evento se enviaba al grupo "tablero-{Guid.Empty}" — un grupo sin
+        // nadie suscrito — así que el broadcast se perdía en silencio (sin error, sin
+        // frame en el WebSocket del otro cliente). Acá el DTO mapeado devuelve
+        // Guid.Empty a propósito: la notificación igual debe ir al proyectoId real.
+        var proyectoId = Guid.NewGuid();
+        // ProyectoId vacío en la columna => dto.ProyectoId mapeado será Guid.Empty.
+        var columnaSinProyecto = new Columna { Id = Guid.NewGuid(), Nombre = "Todo", Orden = 0, ProyectoId = Guid.Empty };
+
+        var tareaRepository = new Mock<ITareaRepository>();
+        tareaRepository.Setup(r => r.GetByColumnaIdAsync(columnaSinProyecto.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Tarea>());
+
+        Tarea? creada = null;
+        tareaRepository.Setup(r => r.AddAsync(It.IsAny<Tarea>(), It.IsAny<CancellationToken>()))
+            .Callback<Tarea, CancellationToken>((t, _) => creada = t)
+            .Returns(Task.CompletedTask);
+        tareaRepository.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                creada!.Columna = columnaSinProyecto;
+                return creada;
+            });
+
+        var unitOfWork = new Mock<IUnitOfWork>();
+        unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+        var notifier = new Mock<ITableroNotifier>();
+
+        var service = new TareaService(tareaRepository.Object, unitOfWork.Object, TestMapperFactory.Create(), notifier.Object);
+        var request = new TareaRequest(columnaSinProyecto.Id, "Primera", string.Empty, "Media", null);
+
+        await service.CreateAsync(proyectoId, request);
+
+        notifier.Verify(
+            n => n.TareaCreadaAsync(proyectoId, It.IsAny<TareaDto>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        notifier.Verify(
+            n => n.TareaCreadaAsync(Guid.Empty, It.IsAny<TareaDto>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_NotificaAlProyectoDeLaRuta_NoAlDerivadoDelDtoPostGuardado()
+    {
+        // Misma regresión que CreateAsync arriba, en la ruta de edición.
+        var proyectoId = Guid.NewGuid();
+        var columna = new Columna { Id = Guid.NewGuid(), Nombre = "Todo", Orden = 0, ProyectoId = proyectoId };
+        var tarea = NuevaTarea(columna, 0);
+
+        var tareaRepository = new Mock<ITareaRepository>();
+        tareaRepository.Setup(r => r.GetByIdAsync(tarea.Id, It.IsAny<CancellationToken>())).ReturnsAsync(tarea);
+
+        var unitOfWork = new Mock<IUnitOfWork>();
+        unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            // Simula el estado post-guardado que rompía el broadcast: la navegación
+            // queda apuntando a una columna sin ProyectoId, así el DTO mapeado
+            // después del guardado trae Guid.Empty.
+            .ReturnsAsync(1)
+            .Callback(() => tarea.Columna = new Columna { Id = columna.Id, Nombre = "Todo", Orden = 0, ProyectoId = Guid.Empty });
+
+        var notifier = new Mock<ITableroNotifier>();
+
+        var service = new TareaService(tareaRepository.Object, unitOfWork.Object, TestMapperFactory.Create(), notifier.Object);
+        var request = new TareaRequest(columna.Id, "Editada", string.Empty, "Alta", null);
+
+        var resultado = await service.UpdateAsync(proyectoId, tarea.Id, request);
+
+        Assert.NotNull(resultado);
+        notifier.Verify(
+            n => n.TareaActualizadaAsync(proyectoId, It.IsAny<TareaDto>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        notifier.Verify(
+            n => n.TareaActualizadaAsync(Guid.Empty, It.IsAny<TareaDto>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

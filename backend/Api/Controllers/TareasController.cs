@@ -35,7 +35,7 @@ public class TareasController : ControllerBase
     {
         try
         {
-            var created = await _tareaService.CreateAsync(request, cancellationToken);
+            var created = await _tareaService.CreateAsync(proyectoId, request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { proyectoId, id = created.Id }, created);
         }
         catch (ArgumentException ex)
@@ -49,8 +49,8 @@ public class TareasController : ControllerBase
     {
         try
         {
-            var updated = await _tareaService.UpdateAsync(id, request, cancellationToken);
-            return updated is null || updated.ProyectoId != proyectoId ? NotFound() : Ok(updated);
+            var updated = await _tareaService.UpdateAsync(proyectoId, id, request, cancellationToken);
+            return updated is null ? NotFound() : Ok(updated);
         }
         catch (ArgumentException ex)
         {

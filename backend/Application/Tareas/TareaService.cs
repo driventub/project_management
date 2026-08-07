@@ -31,7 +31,7 @@ public class TareaService
         return tarea is null ? null : _mapper.Map<TareaDto>(tarea);
     }
 
-    public async Task<TareaDto> CreateAsync(TareaRequest request, CancellationToken cancellationToken = default)
+    public async Task<TareaDto> CreateAsync(Guid proyectoId, TareaRequest request, CancellationToken cancellationToken = default)
     {
         var existentes = await _tareaRepository.GetByColumnaIdAsync(request.ColumnaId, cancellationToken);
 
@@ -50,15 +50,15 @@ public class TareaService
         var creada = await _tareaRepository.GetByIdAsync(tarea.Id, cancellationToken);
         var dto = _mapper.Map<TareaDto>(creada);
 
-        await _tableroNotifier.TareaCreadaAsync(dto.ProyectoId, dto, cancellationToken);
+        await _tableroNotifier.TareaCreadaAsync(proyectoId, dto, cancellationToken);
 
         return dto;
     }
 
-    public async Task<TareaDto?> UpdateAsync(Guid id, TareaRequest request, CancellationToken cancellationToken = default)
+    public async Task<TareaDto?> UpdateAsync(Guid proyectoId, Guid id, TareaRequest request, CancellationToken cancellationToken = default)
     {
         var tarea = await _tareaRepository.GetByIdAsync(id, cancellationToken);
-        if (tarea is null)
+        if (tarea is null || tarea.Columna.ProyectoId != proyectoId)
         {
             return null;
         }
@@ -69,8 +69,8 @@ public class TareaService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         var dto = _mapper.Map<TareaDto>(tarea);
-
-        await _tableroNotifier.TareaActualizadaAsync(dto.ProyectoId, dto, cancellationToken);
+        
+        await _tableroNotifier.TareaActualizadaAsync(proyectoId, dto, cancellationToken);
 
         return dto;
     }

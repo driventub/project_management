@@ -158,6 +158,8 @@ export class TableroComponent implements OnInit, OnDestroy {
         this.tableroRealtime.onTareaActualizada(tarea => this.aplicarTareaActualizada(tarea));
         this.tableroRealtime.onTareaEliminada(tareaId => this.aplicarTareaEliminada(tareaId));
         this.tableroRealtime.onTareaMovida(notificacion => this.aplicarTareaMovida(notificacion));
+        this.tableroRealtime.onColumnaCreada(columna => this.aplicarColumnaCreada(columna));
+        this.tableroRealtime.onColumnaEliminada(columnaId => this.aplicarColumnaEliminada(columnaId));
 
         this.tableroRealtime.iniciar().catch(() => {
             this.messageService.add({ severity: 'warn', summary: 'Tiempo real', detail: 'No se pudo conectar al canal en tiempo real.' });
@@ -203,5 +205,16 @@ export class TableroComponent implements OnInit, OnDestroy {
         if (destino && destino !== origen) {
             destino.tareas = [...notificacion.tareasColumnaDestino].sort((a, b) => a.orden - b.orden);
         }
+    }
+
+    private aplicarColumnaCreada(columna: Columna): void {
+        if (this.columnas.some(c => c.id === columna.id)) {
+            return;
+        }
+        this.columnas = [...this.columnas, { ...columna, tareas: [] }].sort((a, b) => a.orden - b.orden);
+    }
+
+    private aplicarColumnaEliminada(columnaId: string): void {
+        this.columnas = this.columnas.filter(c => c.id !== columnaId);
     }
 }

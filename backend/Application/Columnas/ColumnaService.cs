@@ -16,12 +16,14 @@ public class ColumnaService
     private readonly IColumnaRepository _columnaRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly ITableroNotifier _tableroNotifier;
 
-    public ColumnaService(IColumnaRepository columnaRepository, IUnitOfWork unitOfWork, IMapper mapper)
+    public ColumnaService(IColumnaRepository columnaRepository, IUnitOfWork unitOfWork, IMapper mapper, ITableroNotifier tableroNotifier)
     {
         _columnaRepository = columnaRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _tableroNotifier = tableroNotifier;
     }
 
     public async Task<IReadOnlyList<ColumnaDto>> GetByProyectoIdAsync(Guid proyectoId, CancellationToken cancellationToken = default)
@@ -48,7 +50,10 @@ public class ColumnaService
         await _columnaRepository.AddAsync(columna, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return _mapper.Map<ColumnaDto>(columna);
+        var dto = _mapper.Map<ColumnaDto>(columna);
+        await _tableroNotifier.ColumnaCreadaAsync(proyectoId, dto, cancellationToken);
+
+        return dto;
     }
 
     public async Task<ColumnaDto?> UpdateAsync(Guid id, ColumnaRequest request, CancellationToken cancellationToken = default)
@@ -82,6 +87,9 @@ public class ColumnaService
 
         _columnaRepository.Remove(columna);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await _tableroNotifier.ColumnaEliminadaAsync(columna.ProyectoId, id, cancellationToken);
+
         return ColumnaDeleteResult.Eliminada;
     }
 

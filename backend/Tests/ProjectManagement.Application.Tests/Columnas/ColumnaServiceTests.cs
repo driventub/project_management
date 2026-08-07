@@ -15,7 +15,8 @@ public class ColumnaServiceTests
     {
         unitOfWork ??= new Mock<IUnitOfWork>();
         unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
-        return new ColumnaService(columnaRepository.Object, unitOfWork.Object, TestMapperFactory.Create());
+        var tableroNotifier = new Mock<ITableroNotifier>();
+        return new ColumnaService(columnaRepository.Object, unitOfWork.Object, TestMapperFactory.Create(), tableroNotifier.Object);
     }
 
     [Fact]

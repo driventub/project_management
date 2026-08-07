@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { environment } from 'src/environments/environment';
 import { AuthService } from 'src/app/core/auth/auth.service';
+import { Columna } from '../columnas/columna.models';
 import { Tarea } from '../tareas/tarea.models';
 import { TareaMovidaNotification } from './tablero-realtime.models';
 
@@ -48,6 +49,14 @@ export class TableroRealtimeService {
 
     onTareaMovida(callback: (notificacion: TareaMovidaNotification) => void): void {
         this.connection?.on('TareaMovida', callback);
+    }
+
+    onColumnaCreada(callback: (columna: Columna) => void): void {
+        this.connection?.on('ColumnaCreada', callback);
+    }
+
+    onColumnaEliminada(callback: (columnaId: string) => void): void {
+        this.connection?.on('ColumnaEliminada', callback);
     }
 
     async desconectar(): Promise<void> {
